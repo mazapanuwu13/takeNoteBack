@@ -130,12 +130,13 @@ export const updateNote = async (req, res) => {
   const { noteId, title, description, is_processed, user_id } = req.body;
 
   try {
-    // Verificar si ya existe una nota con la misma descripción y usuario
-    const [descNoteRows] = await pool.query('SELECT nota_id FROM notes WHERE description = ? AND user_id = ?', [description, user_id]);
+    // Verificar si ya existe una nota con el mismo título, descripción y usuario
+    const [existingNoteRows] = await pool.query('SELECT nota_id FROM notes WHERE title = ? AND user_id = ?', [title, user_id]);
 
-    if (descNoteRows.length > 0) {
-      // Si ya existe una nota con la misma descripción y usuario
-      res.status(400).send({ error: 'La descripción de la nota ya ha sido registrada' , status:false});
+    if (existingNoteRows.length > 0 && existingNoteRows[0].nota_id !== noteId) {
+      // Si ya existe una nota con el mismo título y usuario, pero no es la misma nota que se está actualizando
+      
+      res.status(400).send({ error: 'El título de la nota ya ha sido registrado', status: false });
     } else {
       // Realizar la actualización en la base de datos
       const [result] = await pool.query(
@@ -144,9 +145,9 @@ export const updateNote = async (req, res) => {
       );
 
       if (result.affectedRows > 0) {
-        res.status(200).send({ message: 'Nota actualizada con éxito',status:true });
+        res.status(200).send({ message: 'Nota actualizada con éxito', status: true });
       } else {
-        res.status(404).send({ error: 'Nota no encontrada', status:false });
+        res.status(404).send({ error: 'Nota no encontrada', status: false });
       }
     }
   } catch (error) {
@@ -154,6 +155,7 @@ export const updateNote = async (req, res) => {
     res.status(500).send({ error: 'Error interno del servidor' });
   }
 };
+
 
 
 
